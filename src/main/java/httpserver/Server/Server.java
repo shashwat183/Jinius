@@ -3,33 +3,35 @@ package httpserver.Server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import httpserver.Exceptions.InvalidSegmentException;
+import httpserver.Http.HttpVerb;
 
-public class Server implements Runnable {
-  Integer port;
-  String assetsDir;
+public class Server {
+  private static final Logger logger = LoggerFactory.getLogger(Server.class);
+  private Trie handlers;
 
-  public Server(Integer port, String assetsDir) {
-    this.port = port;
-    this.assetsDir = assetsDir;
+  public Server() {
+    this.handlers = new Trie();
   }
 
-  @Override
-  public void run() {
-    try {
-      this.startServer();
-    } catch (IOException e) {
-      System.out.println("Failed starting server on port: " + port + e.toString());
-    }
+  public void registerHandler(HttpVerb method, String path, IHandler handler) throws InvalidSegmentException {
+    handlers.addHandler(method, path, handler);
   }
 
-  private void startServer() throws IOException {
+  public void registerStaticHanlder(String prefix, String directory) {
+    handlers.addStaticHandler(prefix, directory);
+  }
+
+  public void listenAndServe(Integer port) throws IOException {
+    logger.info("Listening on Port {}", port);
     try (ServerSocket serverSocket = new ServerSocket(port)) {
       while (true) {
         Socket client = serverSocket.accept();
-        Thread thread = new Thread(new RequestHandler(client, assetsDir));
+        ServerThread thread = new ServerThread(client, handlers);
         thread.start();
       }
     }
   }
-
 }

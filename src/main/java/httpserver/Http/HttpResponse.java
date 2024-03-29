@@ -1,37 +1,27 @@
 package httpserver.Http;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public record HttpResponse(String version, Integer statusCode, String statusText,
-    Optional<Map<String, String>> headers, Optional<String> body) {
+public class HttpResponse {
+  private String version;
+  private HttpStatus status;
+  private Map<String, String> headers;
+  private Optional<String> body;
 
-  private static final String httpVersion = "HTTP/1.1";
-
-  public static HttpResponse methodNotFound(List<String> allowedMethods) {
-    Map<String, String> headers = new HashMap<>();
-    headers.put("Allow", String.join(",", allowedMethods));
-    return new HttpResponse(httpVersion, 405, "Method Not Allowed", Optional.of(headers), Optional.empty());
-  }
-
-  public static HttpResponse notFound(Optional<Map<String, String>> headers) {
-    return new HttpResponse(httpVersion, 404, "Not Found", headers, Optional.empty());
-  }
-
-  public static HttpResponse ok(Optional<Map<String, String>> headers, Optional<String> body) {
-    return new HttpResponse(httpVersion, 200, "OK", headers, body);
+  public HttpResponse() {
+    this.version = "HTTP/1.1";
+    this.status = HttpStatus.InternalServerError;
+    this.headers = new HashMap<>();
+    this.body = Optional.empty();
   }
 
   public String toHttpMessage() {
     String message = "";
-    message += version + " " + statusCode + " " + statusText + " \r\n";
-    if (headers.isPresent()) {
-      Map<String, String> headersMap = headers.get();
-      for (Map.Entry<String, String> entry: headersMap.entrySet()) {
-        message += entry.getKey() + ": " + entry.getValue() + "\r\n";
-      }
+    message += version + " " + status.getStatusCode() + " " + status.getMessage() + " \r\n";
+    for (Map.Entry<String, String> entry : headers.entrySet()) {
+      message += entry.getKey() + ": " + entry.getValue() + "\r\n";
     }
     message += "\r\n";
     if (body.isPresent()) {
@@ -40,5 +30,25 @@ public record HttpResponse(String version, Integer statusCode, String statusText
       message += "\r\n";
     }
     return message;
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
+  }
+
+  public void setStatus(HttpStatus status) {
+    this.status = status;
+  }
+
+  public void addHeader(String key, String value) {
+    this.headers.put(key, value);
+  }
+
+  public void setBody(Optional<String> body) {
+    this.body = body;
+  }
+
+  public HttpStatus getStatus() {
+    return status;
   }
 }

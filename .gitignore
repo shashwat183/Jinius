@@ -7,3 +7,6 @@ venv/
 runner.py
 PERF_TEST.md
 TODO.md
+repo/
+server.log
+assets/
